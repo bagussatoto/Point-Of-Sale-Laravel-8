@@ -80,11 +80,6 @@ Menjalankan aplikasi
 php artisan serve
 ```
 
-## Link Tutorial
-
-- [Youtube](https://www.youtube.com/playlist?list=PLaN75JfoGz0Okf9f_7GbGM5IFaLXWx-_C)
-- [W2Learn](https://www.w2learn.com)
-
 ## License
 
 [MIT license](https://opensource.org/licenses/MIT)
