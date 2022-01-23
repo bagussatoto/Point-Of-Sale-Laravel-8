@@ -79,6 +79,16 @@ Menjalankan aplikasi
 ```bash
 php artisan serve
 ```
+Kredensial login
+```
+- Administrator
+Email       : admin@gmail.com
+Password    : 123
+
+- Kasir
+Email       : kasir1@gmail.com
+Password    : 123
+```
 
 ## License
 
