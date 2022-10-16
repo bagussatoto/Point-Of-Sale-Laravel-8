@@ -25,7 +25,7 @@
     "issues": "https://github.com/almasaeed2010/AdminLTE/issues"
   },
   "require": {
-    "bower-asset/jquery": ">=1.9.0 <4.0.0"
+    "bower-asset/jquery": "3.6.1"
   },
   "repositories": [
     {
