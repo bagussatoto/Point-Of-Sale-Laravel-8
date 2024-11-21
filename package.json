@@ -14,7 +14,7 @@
         "@tailwindcss/typography": "^0.3.0",
         "alpinejs": "^2.7.3",
         "autoprefixer": "^10.0.2",
-        "axios": "^0.21",
+        "axios": "^0.29.0",
         "laravel-mix": "^6.0.6",
         "lodash": "^4.17.19",
         "postcss": "^8.1.14",
