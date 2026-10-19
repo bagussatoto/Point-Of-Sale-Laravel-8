@@ -1,0 +1,158 @@
+// Project: Point of Sale (POS) Laravel 8
+// DBML specification - Compatible with dbdiagram.io & dbdocs.io
+
+Project POS_Laravel_8 {
+  database_type: 'MySQL'
+  Note: 'Database Schema untuk Aplikasi Point of Sale (POS) Tokoku berbasis Laravel 8'
+}
+
+Table kategori {
+  id_kategori int [pk, increment, note: 'Primary Key']
+  nama_kategori varchar(255) [unique, not null]
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  Note: 'Kategori pengelompokan produk'
+}
+
+Table produk {
+  id_produk int [pk, increment, note: 'Primary Key']
+  id_kategori int [not null, note: 'Foreign Key ke kategori']
+  kode_produk varchar(255) [unique, not null, note: 'Barcode / SKU']
+  nama_produk varchar(255) [unique, not null]
+  merk varchar(255) [null]
+  harga_beli int [not null]
+  diskon tinyint [default: 0]
+  harga_jual int [not null]
+  stok int [not null]
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  Note: 'Master produk dagangan'
+}
+
+Table member {
+  id_member int [pk, increment, note: 'Primary Key']
+  kode_member varchar(255) [unique, not null]
+  nama varchar(255) [not null]
+  telepon varchar(255) [not null]
+  alamat text [null]
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  Note: 'Pelanggan terdaftar / member toko'
+}
+
+Table supplier {
+  id_supplier int [pk, increment, note: 'Primary Key']
+  nama varchar(255) [not null]
+  telepon varchar(255) [not null]
+  alamat text [null]
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  Note: 'Vendor pemasok produk'
+}
+
+Table users {
+  id bigint [pk, increment, note: 'Primary Key']
+  name varchar(255) [not null]
+  email varchar(255) [unique, not null]
+  password varchar(255) [not null]
+  foto varchar(255) [null]
+  level tinyint [default: 0, note: '1: Administrator, 2: Kasir']
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  Note: 'Staf pengguna aplikasi kasir'
+}
+
+Table pembelian {
+  id_pembelian int [pk, increment, note: 'Primary Key']
+  id_supplier int [not null, note: 'Relasi ke supplier']
+  total_item int [not null]
+  total_harga int [not null]
+  diskon tinyint [default: 0]
+  bayar int [default: 0]
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  Note: 'Faktur pembelian barang dari supplier'
+}
+
+Table pembelian_detail {
+  id_pembelian_detail int [pk, increment, note: 'Primary Key']
+  id_pembelian int [not null, note: 'Relasi ke pembelian']
+  id_produk int [not null, note: 'Relasi ke produk']
+  harga_beli int [not null]
+  jumlah int [not null]
+  subtotal int [not null]
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  Note: 'Rincian item pembelian'
+}
+
+Table penjualan {
+  id_penjualan int [pk, increment, note: 'Primary Key']
+  id_user int [not null, note: 'Kasir yang bertransaksi']
+  id_member int [null, note: 'Opsional, null jika pelanggan umum']
+  total_item int [not null]
+  total_harga int [not null]
+  diskon tinyint [default: 0]
+  bayar int [default: 0]
+  diterima int [default: 0]
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  Note: 'Transaksi kasir penjualan'
+}
+
+Table penjualan_detail {
+  id_penjualan_detail int [pk, increment, note: 'Primary Key']
+  id_penjualan int [not null, note: 'Relasi ke penjualan']
+  id_produk int [not null, note: 'Relasi ke produk']
+  harga_jual int [not null]
+  jumlah int [not null]
+  diskon tinyint [default: 0]
+  subtotal int [not null]
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  Note: 'Rincian item penjualan per nota'
+}
+
+Table pengeluaran {
+  id_pengeluaran int [pk, increment, note: 'Primary Key']
+  deskripsi text [not null]
+  nominal int [not null]
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  Note: 'Beban operasional toko'
+}
+
+Table setting {
+  id_setting int [pk, increment, note: 'Primary Key']
+  nama_perusahaan varchar(255) [not null]
+  telepon varchar(255) [not null]
+  alamat text [null]
+  tipe_nota tinyint [not null, note: '1: Struk Thermal, 2: PDF Besar']
+  diskon smallint [default: 0]
+  path_logo varchar(255) [not null]
+  path_kartu_member varchar(255) [not null]
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  Note: 'Konfigurasi profil toko dan nota'
+}
+
+// Relationships (References)
+Ref: produk.id_kategori > kategori.id_kategori [delete: restrict, update: restrict]
+Ref: pembelian.id_supplier > supplier.id_supplier [delete: restrict]
+Ref: pembelian_detail.id_pembelian > pembelian.id_pembelian [delete: cascade]
+Ref: pembelian_detail.id_produk > produk.id_produk [delete: restrict]
+Ref: penjualan.id_member > member.id_member [delete: set null]
+Ref: penjualan.id_user > users.id [delete: restrict]
+Ref: penjualan_detail.id_penjualan > penjualan.id_penjualan [delete: cascade]
+Ref: penjualan_detail.id_produk > produk.id_produk [delete: restrict]
