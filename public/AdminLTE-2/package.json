@@ -11,7 +11,7 @@
     "R2": "^1.4.3",
     "grunt": "^1.0.4",
     "grunt-bootlint": "^0.12.2",
-    "grunt-contrib-clean": "^0.6",
+    "grunt-contrib-clean": "^0.7.0",
     "grunt-contrib-concat": "^1.0.1",
     "grunt-contrib-csslint": "^2.0.0",
     "grunt-contrib-cssmin": "^3.0.0",
