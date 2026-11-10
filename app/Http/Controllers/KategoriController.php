@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Kategori;
+use App\Models\Produk;
 
 class KategoriController extends Controller
 {
@@ -110,7 +111,13 @@ class KategoriController extends Controller
     public function destroy($id)
     {
         $kategori = Kategori::find($id);
-        $kategori->delete();
+        if ($kategori) {
+            $hasProduk = Produk::where('id_kategori', $id)->exists();
+            if ($hasProduk) {
+                return response()->json('Kategori ini tidak dapat dihapus karena masih digunakan oleh produk', 422);
+            }
+            $kategori->delete();
+        }
 
         return response(null, 204);
     }
