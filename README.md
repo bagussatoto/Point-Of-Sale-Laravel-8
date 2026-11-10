@@ -23,7 +23,7 @@
 6. [Instalasi dan Konfigurasi](#-instalasi-dan-konfigurasi)
 7. [Akun Bawaan (Default Seeder)](#-akun-bawaan-default-seeder)
 8. [Struktur Direktori Proyek](#-struktur-direktori-proyek)
-9. [Lisensi](#-lisensi)
+9. [Kontributor & Lisensi](#-kontributor--lisensi)
 
 ---
 
@@ -406,6 +406,15 @@ Point-Of-Sale-Laravel-8/
 
 ---
 
-## 📄 Lisensi
+## 👨‍💻 Kontributor & Lisensi
+
+Aplikasi ini dikembangkan dan dirancang oleh:
+
+**Bagus Budi Satoto**
+- **GitHub:** [@bagussatoto](https://github.com/bagussatoto)
+- **Email:** [bagusbudi1308@gmail.com](mailto:bagusbudi1308@gmail.com)
+- **Instagram:** [@bagus_satoto1](https://www.instagram.com/bagus_satoto1/)
+
+---
 
 Aplikasi ini dilisensikan di bawah lisensi terbuka [MIT License](LICENSE). Bebas digunakan, dipelajari, dan dikembangkan untuk keperluan komersial maupun edukasi.
