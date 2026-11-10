@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\PengeluaranRequest;
 use Illuminate\Http\Request;
 use App\Models\Pengeluaran;
 
@@ -53,9 +54,9 @@ class PengeluaranController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(PengeluaranRequest $request)
     {
-        $pengeluaran = Pengeluaran::create($request->all());
+        Pengeluaran::create($request->validated());
 
         return response()->json('Data berhasil disimpan', 200);
     }
@@ -91,9 +92,10 @@ class PengeluaranController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(PengeluaranRequest $request, $id)
     {
-        $pengeluaran = Pengeluaran::find($id)->update($request->all());
+        $pengeluaran = Pengeluaran::findOrFail($id);
+        $pengeluaran->update($request->validated());
 
         return response()->json('Data berhasil disimpan', 200);
     }
@@ -106,7 +108,10 @@ class PengeluaranController extends Controller
      */
     public function destroy($id)
     {
-        $pengeluaran = Pengeluaran::find($id)->delete();
+        $pengeluaran = Pengeluaran::find($id);
+        if ($pengeluaran) {
+            $pengeluaran->delete();
+        }
 
         return response(null, 204);
     }

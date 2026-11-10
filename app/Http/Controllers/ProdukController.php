@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ProdukRequest;
 use App\Models\Kategori;
+use App\Models\PembelianDetail;
+use App\Models\PenjualanDetail;
 use Illuminate\Http\Request;
 use App\Models\Produk;
 use PDF;
@@ -76,12 +79,15 @@ class ProdukController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(ProdukRequest $request)
     {
-        $produk = Produk::orderBy('id_produk', 'desc')->first() ?? new Produk();
-        $request['kode_produk'] = 'P'. tambah_nol_didepan((int)$produk->id_produk +1, 6);
+        $data = $request->validated();
+        $lastProduk = Produk::orderBy('id_produk', 'desc')->first();
+        $nextId = ($lastProduk ? (int) $lastProduk->id_produk : 0) + 1;
+        $data['kode_produk'] = 'P' . tambah_nol_didepan($nextId, 6);
+        $data['diskon'] = $data['diskon'] ?? 0;
 
-        $produk = Produk::create($request->all());
+        Produk::create($data);
 
         return response()->json('Data berhasil disimpan', 200);
     }
@@ -117,10 +123,12 @@ class ProdukController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(ProdukRequest $request, $id)
     {
-        $produk = Produk::find($id);
-        $produk->update($request->all());
+        $produk = Produk::findOrFail($id);
+        $data = $request->validated();
+        $data['diskon'] = $data['diskon'] ?? 0;
+        $produk->update($data);
 
         return response()->json('Data berhasil disimpan', 200);
     }
@@ -134,7 +142,14 @@ class ProdukController extends Controller
     public function destroy($id)
     {
         $produk = Produk::find($id);
-        $produk->delete();
+        if ($produk) {
+            $inPenjualan = PenjualanDetail::where('id_produk', $id)->exists();
+            $inPembelian = PembelianDetail::where('id_produk', $id)->exists();
+            if ($inPenjualan || $inPembelian) {
+                return response()->json('Produk tidak dapat dihapus karena sudah memiliki riwayat transaksi', 422);
+            }
+            $produk->delete();
+        }
 
         return response(null, 204);
     }

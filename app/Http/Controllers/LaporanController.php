@@ -2,14 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Pembelian;
-use App\Models\Pengeluaran;
-use App\Models\Penjualan;
+use App\Services\LaporanService;
 use Illuminate\Http\Request;
 use PDF;
 
 class LaporanController extends Controller
 {
+    protected $laporanService;
+
+    public function __construct(LaporanService $laporanService)
+    {
+        $this->laporanService = $laporanService;
+    }
+
     public function index(Request $request)
     {
         $tanggalAwal = date('Y-m-d', mktime(0, 0, 0, date('m'), 1, date('Y')));
@@ -25,31 +30,22 @@ class LaporanController extends Controller
 
     public function getData($awal, $akhir)
     {
+        $ringkasan = $this->laporanService->getRingkasanHarian($awal, $akhir);
         $no = 1;
-        $data = array();
-        $pendapatan = 0;
+        $data = [];
         $total_pendapatan = 0;
 
-        while (strtotime($awal) <= strtotime($akhir)) {
-            $tanggal = $awal;
-            $awal = date('Y-m-d', strtotime("+1 day", strtotime($awal)));
+        foreach ($ringkasan as $item) {
+            $total_pendapatan += $item['pendapatan'];
 
-            $total_penjualan = Penjualan::where('created_at', 'LIKE', "%$tanggal%")->sum('bayar');
-            $total_pembelian = Pembelian::where('created_at', 'LIKE', "%$tanggal%")->sum('bayar');
-            $total_pengeluaran = Pengeluaran::where('created_at', 'LIKE', "%$tanggal%")->sum('nominal');
-
-            $pendapatan = $total_penjualan - $total_pembelian - $total_pengeluaran;
-            $total_pendapatan += $pendapatan;
-
-            $row = array();
-            $row['DT_RowIndex'] = $no++;
-            $row['tanggal'] = tanggal_indonesia($tanggal, false);
-            $row['penjualan'] = format_uang($total_penjualan);
-            $row['pembelian'] = format_uang($total_pembelian);
-            $row['pengeluaran'] = format_uang($total_pengeluaran);
-            $row['pendapatan'] = format_uang($pendapatan);
-
-            $data[] = $row;
+            $data[] = [
+                'DT_RowIndex' => $no++,
+                'tanggal' => tanggal_indonesia($item['tanggal'], false),
+                'penjualan' => format_uang($item['penjualan']),
+                'pembelian' => format_uang($item['pembelian']),
+                'pengeluaran' => format_uang($item['pengeluaran']),
+                'pendapatan' => format_uang($item['pendapatan']),
+            ];
         }
 
         $data[] = [

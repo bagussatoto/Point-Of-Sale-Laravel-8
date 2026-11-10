@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Http\Requests\KategoriRequest;
 use App\Models\Kategori;
 use App\Models\Produk;
 
@@ -53,11 +54,9 @@ class KategoriController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(KategoriRequest $request)
     {
-        $kategori = new Kategori();
-        $kategori->nama_kategori = $request->nama_kategori;
-        $kategori->save();
+        Kategori::create($request->validated());
 
         return response()->json('Data berhasil disimpan', 200);
     }
@@ -93,11 +92,10 @@ class KategoriController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(KategoriRequest $request, $id)
     {
-        $kategori = Kategori::find($id);
-        $kategori->nama_kategori = $request->nama_kategori;
-        $kategori->update();
+        $kategori = Kategori::findOrFail($id);
+        $kategori->update($request->validated());
 
         return response()->json('Data berhasil disimpan', 200);
     }

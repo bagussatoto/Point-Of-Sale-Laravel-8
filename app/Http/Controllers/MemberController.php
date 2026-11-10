@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\MemberRequest;
 use App\Models\Member;
+use App\Models\Penjualan;
 use App\Models\Setting;
 use Illuminate\Http\Request;
 use PDF;
@@ -62,17 +64,14 @@ class MemberController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(MemberRequest $request)
     {
-        $member = Member::orderBy('id_member', 'desc')->first() ?? new Member();
-        $kode_member = (int) $member->kode_member +1;
+        $lastMember = Member::orderBy('id_member', 'desc')->first();
+        $kode_member = ($lastMember ? (int) $lastMember->kode_member : 0) + 1;
 
-        $member = new Member();
-        $member->kode_member = tambah_nol_didepan($kode_member, 5);
-        $member->nama = $request->nama;
-        $member->telepon = $request->telepon;
-        $member->alamat = $request->alamat;
-        $member->save();
+        $data = $request->validated();
+        $data['kode_member'] = tambah_nol_didepan($kode_member, 5);
+        Member::create($data);
 
         return response()->json('Data berhasil disimpan', 200);
     }
@@ -108,9 +107,10 @@ class MemberController extends Controller
      * @param int $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(MemberRequest $request, $id)
     {
-        $member = Member::find($id)->update($request->all());
+        $member = Member::findOrFail($id);
+        $member->update($request->validated());
 
         return response()->json('Data berhasil disimpan', 200);
     }
@@ -124,7 +124,12 @@ class MemberController extends Controller
     public function destroy($id)
     {
         $member = Member::find($id);
-        $member->delete();
+        if ($member) {
+            if (Penjualan::where('id_member', $id)->exists()) {
+                return response()->json('Member tidak dapat dihapus karena memiliki riwayat transaksi penjualan', 422);
+            }
+            $member->delete();
+        }
 
         return response(null, 204);
     }

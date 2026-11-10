@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\SupplierRequest;
 use Illuminate\Http\Request;
+use App\Models\Pembelian;
 use App\Models\Supplier;
 
 class SupplierController extends Controller
@@ -47,9 +49,9 @@ class SupplierController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(SupplierRequest $request)
     {
-        $supplier = Supplier::create($request->all());
+        Supplier::create($request->validated());
 
         return response()->json('Data berhasil disimpan', 200);
     }
@@ -85,9 +87,10 @@ class SupplierController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(SupplierRequest $request, $id)
     {
-        $supplier = Supplier::find($id)->update($request->all());
+        $supplier = Supplier::findOrFail($id);
+        $supplier->update($request->validated());
 
         return response()->json('Data berhasil disimpan', 200);
     }
@@ -100,7 +103,13 @@ class SupplierController extends Controller
      */
     public function destroy($id)
     {
-        $supplier = Supplier::find($id)->delete();
+        $supplier = Supplier::find($id);
+        if ($supplier) {
+            if (Pembelian::where('id_supplier', $id)->exists()) {
+                return response()->json('Supplier tidak dapat dihapus karena memiliki riwayat pembelian', 422);
+            }
+            $supplier->delete();
+        }
 
         return response(null, 204);
     }
