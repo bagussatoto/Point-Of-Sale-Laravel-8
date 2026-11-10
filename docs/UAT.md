@@ -23,7 +23,43 @@ Dokumen ini digunakan sebagai panduan pengujian penerimaan pengguna (*User Accep
 
 ---
 
-## 🧪 2. Skenario Pengujian (Test Cases)
+## 🛠️ 2. Prosedur Penerapan UAT (SOP & Kriteria Kelulusan)
+
+### 2.1. Prasyarat Sebelum UAT (*Entry Criteria*)
+Sebelum pengujian dimulai, pastikan lingkungan uji memenuhi syarat berikut:
+1. Aplikasi berjalan pada environment *staging* atau lokal dengan database bersih hasil migrasi dan seeder (`php artisan migrate:fresh --seed`).
+2. Minimal tersedia 2 data Kategori, 3 data Produk, 1 Supplier, dan 1 Member sebagai data uji awal.
+3. Perangkat keras toko (jika digunakan di produksi) seperti *barcode scanner* USB dan *printer thermal 75mm* sudah terhubung ke komputer kasir.
+
+### 2.2. Peran & Tanggung Jawab
+| Peran | Pihak Terkait | Tugas Utama |
+| :--- | :--- | :--- |
+| **Fasilitator UAT** | Developer / Tim Teknis | Menyiapkan server & database uji, memantau log error (`storage/logs/laravel.log`), dan memperbaiki bug yang ditemukan. |
+| **Penguji (*Tester*)** | Pemilik Toko / Admin / Kasir | Menjalankan seluruh skenario uji sesuai alur kerja toko nyata dan menentukan status **Pass** atau **Fail**. |
+
+### 2.3. Alur Pelaksanaan (*Execution Workflow*)
+
+```mermaid
+flowchart LR
+    A["1. Persiapan & Briefing"] --> B["2. Eksekusi 23 Test Case"]
+    B --> C{"Ada Status Fail?"}
+    C -->|"Ya"| D["3. Catat di Defect Log"]
+    D --> E["4. Perbaikan Developer"]
+    E --> F["5. Uji Ulang (Retest)"]
+    F --> C
+    C -->|"Tidak / Memenuhi Exit Criteria"| G["6. Sign-Off & Go-Live"]
+```
+
+### 2.4. Klasifikasi Bug (*Severity*) & Kriteria Lulus (*Exit Criteria*)
+| Tingkat Keparahan | Definisi & Contoh Kasus | Syarat Kelulusan (*Exit Criteria*) |
+| :--- | :--- | :--- |
+| **Critical / Blocker** | Aplikasi crash (500), stok produk tidak sinkron, salah hitung bayar/kembalian, nota gagal cetak. | **Wajib 0 bug** sebelum Go-Live. |
+| **Major** | Fitur berjalan namun ada validasi penting yang terlewat atau tampilan data tidak akurat. | Wajib diperbaiki sebelum *Sign-Off* final. |
+| **Minor / Cosmetic** | Salah ketik teks label ringan atau margin tampilan sedikit bergeser tanpa mengganggu fungsi. | Boleh *Approved with Minor Notes* (diperbaiki di patch berikutnya). |
+
+---
+
+## 🧪 3. Skenario Pengujian (Test Cases)
 
 ### A. Autentikasi, Dashboard & Hak Akses (`CekLevel`)
 
@@ -83,7 +119,19 @@ Dokumen ini digunakan sebagai panduan pengujian penerimaan pengguna (*User Accep
 
 ---
 
-## 📝 3. Ringkasan Hasil & Persetujuan (*Sign-Off*)
+## 🐛 4. Log Temuan Bug (*Defect Report Log*)
+
+Isi tabel di bawah ini apabila terdapat skenario uji yang berstatus **Fail**:
+
+| No | ID Test Case | Deskripsi Masalah / Error | Tingkat Keparahan (*Severity*) | Bukti / Screenshot | Status Perbaikan |
+| :-: | :--- | :--- | :--- | :--- | :--- |
+| 1 | `UAT-__` | | `Critical / Major / Minor` | | `Open / Fixed / Retested` |
+| 2 | `UAT-__` | | `Critical / Major / Minor` | | `Open / Fixed / Retested` |
+| 3 | `UAT-__` | | `Critical / Major / Minor` | | `Open / Fixed / Retested` |
+
+---
+
+## 📝 5. Ringkasan Hasil & Persetujuan (*Sign-Off*)
 
 | Ringkasan | Jumlah |
 | :--- | :---: |
@@ -101,3 +149,4 @@ Dokumen ini digunakan sebagai panduan pengujian penerimaan pengguna (*User Accep
 | Nama: ________________________ | Nama: ________________________ |
 | Tanggal: _____________________ | Tanggal: _____________________ |
 | Tanda Tangan: | Tanda Tangan: |
+
