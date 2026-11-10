@@ -26,17 +26,18 @@ class DashboardController extends Controller
         $data_tanggal = array();
         $data_pendapatan = array();
 
-        while (strtotime($tanggal_awal) <= strtotime($tanggal_akhir)) {
-            $data_tanggal[] = (int) substr($tanggal_awal, 8, 2);
+        $current_date = $tanggal_awal;
+        while (strtotime($current_date) <= strtotime($tanggal_akhir)) {
+            $data_tanggal[] = (int) substr($current_date, 8, 2);
 
-            $total_penjualan = Penjualan::where('created_at', 'LIKE', "%$tanggal_awal%")->sum('bayar');
-            $total_pembelian = Pembelian::where('created_at', 'LIKE', "%$tanggal_awal%")->sum('bayar');
-            $total_pengeluaran = Pengeluaran::where('created_at', 'LIKE', "%$tanggal_awal%")->sum('nominal');
+            $total_penjualan = Penjualan::where('created_at', 'LIKE', "%$current_date%")->sum('bayar');
+            $total_pembelian = Pembelian::where('created_at', 'LIKE', "%$current_date%")->sum('bayar');
+            $total_pengeluaran = Pengeluaran::where('created_at', 'LIKE', "%$current_date%")->sum('nominal');
 
             $pendapatan = $total_penjualan - $total_pembelian - $total_pengeluaran;
-            $data_pendapatan[] += $pendapatan;
+            $data_pendapatan[] = $pendapatan;
 
-            $tanggal_awal = date('Y-m-d', strtotime("+1 day", strtotime($tanggal_awal)));
+            $current_date = date('Y-m-d', strtotime("+1 day", strtotime($current_date)));
         }
 
         if (auth()->user()->level == 1) {

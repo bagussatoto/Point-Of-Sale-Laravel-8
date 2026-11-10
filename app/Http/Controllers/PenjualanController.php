@@ -7,6 +7,7 @@ use App\Models\PenjualanDetail;
 use App\Models\Produk;
 use App\Models\Setting;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use PDF;
 
 class PenjualanController extends Controller
@@ -18,7 +19,7 @@ class PenjualanController extends Controller
 
     public function data()
     {
-        $penjualan = Penjualan::with('member')->orderBy('id_penjualan', 'desc')->get();
+        $penjualan = Penjualan::with(['member', 'user'])->orderBy('id_penjualan', 'desc')->get();
 
         return datatables()
             ->of($penjualan)
@@ -37,7 +38,7 @@ class PenjualanController extends Controller
             })
             ->addColumn('kode_member', function ($penjualan) {
                 $member = $penjualan->member->kode_member ?? '';
-                return '<span class="label label-success">'. $member .'</spa>';
+                return '<span class="label label-success">'. $member .'</span>';
             })
             ->editColumn('diskon', function ($penjualan) {
                 return $penjualan->diskon . '%';
@@ -82,17 +83,22 @@ class PenjualanController extends Controller
         $penjualan->diskon = $request->diskon;
         $penjualan->bayar = $request->bayar;
         $penjualan->diterima = $request->diterima;
-        $penjualan->update();
 
-        $detail = PenjualanDetail::where('id_penjualan', $penjualan->id_penjualan)->get();
-        foreach ($detail as $item) {
-            $item->diskon = $request->diskon;
-            $item->update();
+        DB::transaction(function () use ($penjualan, $request) {
+            $penjualan->update();
 
-            $produk = Produk::find($item->id_produk);
-            $produk->stok -= $item->jumlah;
-            $produk->update();
-        }
+            $detail = PenjualanDetail::where('id_penjualan', $penjualan->id_penjualan)->get();
+            foreach ($detail as $item) {
+                $item->diskon = $request->diskon;
+                $item->update();
+
+                $produk = Produk::find($item->id_produk);
+                if ($produk) {
+                    $produk->stok -= $item->jumlah;
+                    $produk->update();
+                }
+            }
+        });
 
         return redirect()->route('transaksi.selesai');
     }
@@ -126,18 +132,22 @@ class PenjualanController extends Controller
     public function destroy($id)
     {
         $penjualan = Penjualan::find($id);
-        $detail    = PenjualanDetail::where('id_penjualan', $penjualan->id_penjualan)->get();
-        foreach ($detail as $item) {
-            $produk = Produk::find($item->id_produk);
-            if ($produk) {
-                $produk->stok += $item->jumlah;
-                $produk->update();
-            }
+        if ($penjualan) {
+            DB::transaction(function () use ($penjualan) {
+                $detail = PenjualanDetail::where('id_penjualan', $penjualan->id_penjualan)->get();
+                foreach ($detail as $item) {
+                    $produk = Produk::find($item->id_produk);
+                    if ($produk) {
+                        $produk->stok += $item->jumlah;
+                        $produk->update();
+                    }
 
-            $item->delete();
+                    $item->delete();
+                }
+
+                $penjualan->delete();
+            });
         }
-
-        $penjualan->delete();
 
         return response(null, 204);
     }
@@ -175,7 +185,7 @@ class PenjualanController extends Controller
             ->get();
 
         $pdf = PDF::loadView('penjualan.nota_besar', compact('setting', 'penjualan', 'detail'));
-        $pdf->setPaper(0,0,609,440, 'potrait');
+        $pdf->setPaper([0, 0, 609, 440], 'portrait');
         return $pdf->stream('Transaksi-'. date('Y-m-d-his') .'.pdf');
     }
 }

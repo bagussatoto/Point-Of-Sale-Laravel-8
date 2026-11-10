@@ -112,7 +112,14 @@ class UserController extends Controller
      */
     public function destroy($id)
     {
-        $user = User::find($id)->delete();
+        if ($id == auth()->id()) {
+            return response()->json('Tidak dapat menghapus akun sendiri', 400);
+        }
+
+        $user = User::find($id);
+        if ($user) {
+            $user->delete();
+        }
 
         return response(null, 204);
     }
@@ -127,6 +134,11 @@ class UserController extends Controller
     {
         $user = auth()->user();
         
+        $request->validate([
+            'name' => 'required',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+        ]);
+
         $user->name = $request->name;
         if ($request->has('password') && $request->password != "") {
             if (Hash::check($request->old_password, $user->password)) {
@@ -142,7 +154,7 @@ class UserController extends Controller
 
         if ($request->hasFile('foto')) {
             $file = $request->file('foto');
-            $nama = 'logo-' . date('YmdHis') . '.' . $file->getClientOriginalExtension();
+            $nama = 'user-' . date('YmdHis') . '.' . $file->getClientOriginalExtension();
             $file->move(public_path('/img'), $nama);
 
             $user->foto = "/img/$nama";

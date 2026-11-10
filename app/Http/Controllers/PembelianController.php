@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use App\Models\Pembelian;
 use App\Models\PembelianDetail;
 use App\Models\Produk;
@@ -19,7 +20,7 @@ class PembelianController extends Controller
 
     public function data()
     {
-        $pembelian = Pembelian::orderBy('id_pembelian', 'desc')->get();
+        $pembelian = Pembelian::with('supplier')->orderBy('id_pembelian', 'desc')->get();
 
         return datatables()
             ->of($pembelian)
@@ -37,7 +38,7 @@ class PembelianController extends Controller
                 return tanggal_indonesia($pembelian->created_at, false);
             })
             ->addColumn('supplier', function ($pembelian) {
-                return $pembelian->supplier->nama;
+                return $pembelian->supplier->nama ?? '';
             })
             ->editColumn('diskon', function ($pembelian) {
                 return $pembelian->diskon . '%';
@@ -77,14 +78,19 @@ class PembelianController extends Controller
         $pembelian->total_harga = $request->total;
         $pembelian->diskon = $request->diskon;
         $pembelian->bayar = $request->bayar;
-        $pembelian->update();
 
-        $detail = PembelianDetail::where('id_pembelian', $pembelian->id_pembelian)->get();
-        foreach ($detail as $item) {
-            $produk = Produk::find($item->id_produk);
-            $produk->stok += $item->jumlah;
-            $produk->update();
-        }
+        DB::transaction(function () use ($pembelian) {
+            $pembelian->update();
+
+            $detail = PembelianDetail::where('id_pembelian', $pembelian->id_pembelian)->get();
+            foreach ($detail as $item) {
+                $produk = Produk::find($item->id_produk);
+                if ($produk) {
+                    $produk->stok += $item->jumlah;
+                    $produk->update();
+                }
+            }
+        });
 
         return redirect()->route('pembelian.index');
     }
@@ -118,17 +124,21 @@ class PembelianController extends Controller
     public function destroy($id)
     {
         $pembelian = Pembelian::find($id);
-        $detail    = PembelianDetail::where('id_pembelian', $pembelian->id_pembelian)->get();
-        foreach ($detail as $item) {
-            $produk = Produk::find($item->id_produk);
-            if ($produk) {
-                $produk->stok -= $item->jumlah;
-                $produk->update();
-            }
-            $item->delete();
-        }
+        if ($pembelian) {
+            DB::transaction(function () use ($pembelian) {
+                $detail = PembelianDetail::where('id_pembelian', $pembelian->id_pembelian)->get();
+                foreach ($detail as $item) {
+                    $produk = Produk::find($item->id_produk);
+                    if ($produk) {
+                        $produk->stok -= $item->jumlah;
+                        $produk->update();
+                    }
+                    $item->delete();
+                }
 
-        $pembelian->delete();
+                $pembelian->delete();
+            });
+        }
 
         return response(null, 204);
     }

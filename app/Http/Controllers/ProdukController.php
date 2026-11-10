@@ -78,7 +78,7 @@ class ProdukController extends Controller
      */
     public function store(Request $request)
     {
-        $produk = Produk::latest()->first() ?? new Produk();
+        $produk = Produk::orderBy('id_produk', 'desc')->first() ?? new Produk();
         $request['kode_produk'] = 'P'. tambah_nol_didepan((int)$produk->id_produk +1, 6);
 
         $produk = Produk::create($request->all());
@@ -141,9 +141,12 @@ class ProdukController extends Controller
 
     public function deleteSelected(Request $request)
     {
-        foreach ($request->id_produk as $id) {
+        $id_produks = $request->id_produk ?? [];
+        foreach ($id_produks as $id) {
             $produk = Produk::find($id);
-            $produk->delete();
+            if ($produk) {
+                $produk->delete();
+            }
         }
 
         return response(null, 204);
@@ -151,15 +154,22 @@ class ProdukController extends Controller
 
     public function cetakBarcode(Request $request)
     {
+        $id_produks = $request->id_produk ?? [];
+        if (empty($id_produks)) {
+            return redirect()->back();
+        }
+
         $dataproduk = array();
-        foreach ($request->id_produk as $id) {
+        foreach ($id_produks as $id) {
             $produk = Produk::find($id);
-            $dataproduk[] = $produk;
+            if ($produk) {
+                $dataproduk[] = $produk;
+            }
         }
 
         $no  = 1;
         $pdf = PDF::loadView('produk.barcode', compact('dataproduk', 'no'));
-        $pdf->setPaper('a4', 'potrait');
+        $pdf->setPaper('a4', 'portrait');
         return $pdf->stream('produk.pdf');
     }
 }

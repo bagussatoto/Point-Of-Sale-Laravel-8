@@ -19,11 +19,21 @@ class SettingController extends Controller
 
     public function update(Request $request)
     {
-        $setting = Setting::first();
+        $request->validate([
+            'nama_perusahaan' => 'required',
+            'telepon' => 'required',
+            'alamat' => 'required',
+            'diskon' => 'nullable|numeric',
+            'tipe_nota' => 'required',
+            'path_logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'path_kartu_member' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+        ]);
+
+        $setting = Setting::first() ?? new Setting();
         $setting->nama_perusahaan = $request->nama_perusahaan;
         $setting->telepon = $request->telepon;
         $setting->alamat = $request->alamat;
-        $setting->diskon = $request->diskon;
+        $setting->diskon = $request->diskon ?? 0;
         $setting->tipe_nota = $request->tipe_nota;
 
         if ($request->hasFile('path_logo')) {
@@ -36,13 +46,13 @@ class SettingController extends Controller
 
         if ($request->hasFile('path_kartu_member')) {
             $file = $request->file('path_kartu_member');
-            $nama = 'logo-' . date('Y-m-dHis') . '.' . $file->getClientOriginalExtension();
+            $nama = 'member-' . date('YmdHis') . '.' . $file->getClientOriginalExtension();
             $file->move(public_path('/img'), $nama);
 
             $setting->path_kartu_member = "/img/$nama";
         }
 
-        $setting->update();
+        $setting->save();
 
         return response()->json('Data berhasil disimpan', 200);
     }

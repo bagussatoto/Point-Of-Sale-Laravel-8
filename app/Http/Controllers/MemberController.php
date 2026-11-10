@@ -32,7 +32,7 @@ class MemberController extends Controller
                 ';
             })
             ->addColumn('kode_member', function ($member) {
-                return '<span class="label label-success">'. $member->kode_member .'<span>';
+                return '<span class="label label-success">'. $member->kode_member .'</span>';
             })
             ->addColumn('aksi', function ($member) {
                 return '
@@ -64,7 +64,7 @@ class MemberController extends Controller
      */
     public function store(Request $request)
     {
-        $member = Member::latest()->first() ?? new Member();
+        $member = Member::orderBy('id_member', 'desc')->first() ?? new Member();
         $kode_member = (int) $member->kode_member +1;
 
         $member = new Member();
@@ -131,10 +131,17 @@ class MemberController extends Controller
 
     public function cetakMember(Request $request)
     {
+        $id_members = $request->id_member ?? [];
+        if (empty($id_members)) {
+            return redirect()->back();
+        }
+
         $datamember = collect(array());
-        foreach ($request->id_member as $id) {
+        foreach ($id_members as $id) {
             $member = Member::find($id);
-            $datamember[] = $member;
+            if ($member) {
+                $datamember->push($member);
+            }
         }
 
         $datamember = $datamember->chunk(2);
@@ -142,7 +149,7 @@ class MemberController extends Controller
 
         $no  = 1;
         $pdf = PDF::loadView('member.cetak', compact('datamember', 'no', 'setting'));
-        $pdf->setPaper(array(0, 0, 566.93, 850.39), 'potrait');
+        $pdf->setPaper(array(0, 0, 566.93, 850.39), 'portrait');
         return $pdf->stream('member.pdf');
     }
 }
