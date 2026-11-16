@@ -29,7 +29,7 @@
     "less": "^3"
   },
   "dependencies": {
-    "bootstrap": "^3.4",
+    "bootstrap": "^5.0.0",
     "bootstrap-colorpicker": "^2.5.3",
     "bootstrap-datepicker": "^1.8",
     "bootstrap-daterangepicker": "^2.1.25",
